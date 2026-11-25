@@ -22,15 +22,14 @@
   * { box-sizing: border-box; }
   html, body { height: 100%; }
   body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    font: 17px/1.6 "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    margin: 0; background: var(--bg); color: var(--ink); overflow: hidden;
+    font: 17px/1.55 "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
     -webkit-text-size-adjust: 100%;
   }
   [hidden] { display: none !important; }
-  h1 { font-size: 20px; margin: 0 0 16px; letter-spacing: -0.02em; }
+  h1 { font-size: 20px; margin: 0 0 14px; letter-spacing: -0.02em; }
   h1 span { color: var(--accent); }
-  h2 { font-size: 26px; margin: 14px 0 8px; letter-spacing: -0.03em; line-height: 1.25; }
-  h3 { font-size: 20px; margin: 0; letter-spacing: -0.02em; }
+  h3 { font-size: 19px; margin: 0; letter-spacing: -0.02em; }
   button, input, select { font: inherit; color: inherit; }
   button {
     border: 1px solid var(--line); background: var(--card); border-radius: 10px;
@@ -38,156 +37,257 @@
     touch-action: manipulation; -webkit-tap-highlight-color: transparent;
   }
   button:active { background: var(--soft); }
-  button:disabled { opacity: .35; cursor: default; }
   button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
   button.primary:active { background: var(--accent); opacity: .85; }
   button.primary:disabled { opacity: .55; cursor: wait; }
   button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, a:focus-visible {
     outline: 2px solid var(--accent); outline-offset: 2px;
   }
-  input[type=text], input[type=url], input[type=password], select {
+  input[type=text], input[type=url], input[type=password], input[type=date], input[type=search], select {
     width: 100%; min-width: 0; border: 1px solid var(--line); background: var(--card);
     border-radius: 10px; padding: 10px 14px; min-height: 52px; font-size: 17px;
   }
   .row { display: flex; gap: 8px; align-items: center; }
   .row > input { flex: 1; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
   .hint { font-size: 14px; color: var(--sub); margin: 6px 0 0; }
-  label.check { display: flex; gap: 10px; align-items: center; min-height: 48px; margin: 8px 0 0; font-size: 15px; }
+  .empty { color: var(--sub); font-size: 15px; margin: 8px 0 0; list-style: none; }
+  label.check { display: flex; gap: 10px; align-items: center; min-height: 48px; font-size: 15px; }
   label.check input { width: 22px; height: 22px; accent-color: var(--ok); flex: none; }
 
-  /* 첫 화면 */
-  #home { max-width: 600px; margin: 0 auto; padding: calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(48px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  /* 뼈대 */
+  #app { height: 100dvh; display: flex; flex-direction: column; max-width: 600px; margin: 0 auto; padding-top: env(safe-area-inset-top); }
+  .top { flex: none; display: flex; align-items: center; gap: 8px; padding: 8px 12px; }
+  .top .rt { flex: 1; min-width: 0; font-weight: 700; font-size: 19px; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .top button { font-size: 14px; padding: 6px 10px; min-height: 40px; }
+  .pin { position: relative; flex: none; margin: 0 12px 6px; aspect-ratio: 16/9; max-height: 34dvh; border-radius: 12px; overflow: hidden; background: #000; }
+  .pin iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  #view { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; padding: 4px 12px 16px; }
+  .tabs { flex: none; display: flex; gap: 4px; padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+  .tabs button { flex: 1; min-height: 52px; padding: 4px 0; font-size: 15px; font-weight: 600; border-color: transparent; background: none; color: var(--sub); }
+  .tabs button[aria-pressed=true] { background: var(--card); border-color: var(--line); color: var(--accent); }
+  .blank { text-align: center; padding: 64px 16px; color: var(--sub); }
+  .blank button { margin-top: 12px; color: var(--ink); }
+
+  /* 1 재료 */
+  .ibar { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .ibar .sp { flex: 1; }
+  .ibar > button { font-size: 14px; padding: 6px 12px; min-height: 44px; }
+  .stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--card); }
+  .stepper button { border: 0; border-radius: 0; width: 48px; min-height: 44px; padding: 0; font-size: 22px; line-height: 1; }
+  .stepper output { padding: 0 6px; min-width: 60px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+  #ings { list-style: none; margin: 0; padding: 0; }
+  #ings.two { columns: 2; column-gap: 14px; font-size: 15px; }
+  #ings li { break-inside: avoid; border-bottom: 1px solid var(--line); }
+  #ings label { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; min-height: 44px; cursor: pointer; line-height: 1.4; -webkit-tap-highlight-color: transparent; }
+  #ings.two label { gap: 8px; padding: 7px 0; min-height: 40px; }
+  #ings input { width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--ok); flex: none; }
+  #ings.two input { width: 20px; height: 20px; }
+  #ings .done { color: var(--sub); text-decoration: line-through; }
+  .qty { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .note { font-size: 13px; color: var(--sub); margin-left: 6px; }
+  #ings.two .note { display: block; margin-left: 0; font-size: 12px; }
+  .est { font-size: 11px; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; color: var(--sub); margin-left: 5px; vertical-align: 1px; }
+
+  /* 2 레시피 */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 10px; }
+  .chip { font-size: 14px; padding: 4px 10px; border-radius: 6px; background: var(--accent-soft); color: var(--accent-ink); }
+  .chip.tag { background: var(--soft); color: var(--sub); }
+  .prog { position: sticky; top: -4px; z-index: 1; background: var(--bg); padding: 6px 0 8px; font-size: 14px; color: var(--sub); display: flex; align-items: center; gap: 10px; }
+  .bar { flex: 1; height: 6px; background: var(--soft); border-radius: 3px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .2s; }
+  #steps { list-style: none; margin: 0; padding: 0; }
+  #steps li { margin-bottom: 8px; }
+  #steps label { display: flex; gap: 12px; align-items: flex-start; padding: 14px; cursor: pointer; background: var(--card); border: 1px solid var(--line); border-radius: 14px; -webkit-tap-highlight-color: transparent; }
+  #steps input { width: 24px; height: 24px; margin: 3px 0 0; accent-color: var(--ok); flex: none; }
+  #steps .num { flex: none; min-width: 22px; font-weight: 800; font-size: 20px; line-height: 1.5; color: var(--accent); font-variant-numeric: tabular-nums; }
+  #steps .txt { font-size: 19px; line-height: 1.5; letter-spacing: -0.01em; word-break: keep-all; overflow-wrap: anywhere; }
+  #steps .done .txt { color: var(--sub); text-decoration: line-through; }
+  #steps .done .num { color: var(--sub); }
+  .sfoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 8px; }
+  .sfoot .sp { flex: 1; }
+  .sfoot button { font-size: 14px; min-height: 44px; }
+  .src { font-size: 15px; color: var(--accent); padding: 10px 0; }
+
+  /* 3 식단 */
+  .weekhead { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .weekhead #wkLabel { flex: 1; font-weight: 700; font-size: 18px; }
+  .weekhead button { min-width: 48px; }
+  .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 14px; }
+  .week button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 64px; padding: 4px 0; font-size: 13px; color: var(--sub); }
+  .week button b { font-size: 18px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .week button i { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); visibility: hidden; }
+  .week button.has i { visibility: visible; }
+  .week button.today { border-color: var(--accent); }
+  .week button.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .week button.sel b { color: #fff; }
+  .week button.sel i { background: #fff; }
+  .meal { margin-top: 10px; padding: 12px 16px; }
+  .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .meal .head button { font-size: 15px; min-height: 44px; }
+  .slot { width: 100%; margin-top: 8px; min-height: 56px; border-style: dashed; background: none; color: var(--sub); font-size: 15px; }
+
+  /* 4 레시피북 */
   #form .row { flex-direction: column; align-items: stretch; }
   #form button { min-height: 52px; }
-  details.settings { margin-top: 10px; font-size: 15px; }
-  details.settings summary { cursor: pointer; color: var(--sub); padding: 12px 0; }
-  details.settings label:not(.check) { display: block; margin: 10px 0 4px; color: var(--sub); }
-  .msg { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 15px; display: none; }
+  .msg { margin-top: 10px; padding: 12px 14px; border-radius: 10px; font-size: 15px; display: none; }
   .msg.show { display: block; }
   .msg.err { background: var(--accent-soft); color: var(--accent-ink); }
   .msg.info { background: var(--soft); }
-  #histCard { margin-top: 20px; }
-  .history { list-style: none; margin: 8px 0 0; padding: 0; }
-  .history li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+  #histCard { margin-top: 16px; }
+  #bookQ { margin-top: 10px; min-height: 46px; }
+  .history { list-style: none; margin: 6px 0 0; padding: 0; }
+  .history li { display: flex; align-items: center; gap: 8px; padding: 9px 0; border-top: 1px solid var(--line); }
   .history li:first-child { border-top: 0; }
   .history a { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; color: var(--ink); text-decoration: none; }
-  .history img { width: 88px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; flex: none; background: var(--soft); }
+  .history img { width: 80px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; flex: none; background: var(--soft); }
   .history .ht { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.35; font-weight: 600; }
-  .history button { font-size: 14px; color: var(--sub); flex: none; }
+  .history button { font-size: 14px; color: var(--sub); flex: none; padding: 8px 10px; min-height: 44px; }
+  details.settings { margin-top: 14px; font-size: 15px; }
+  details.settings summary { cursor: pointer; color: var(--sub); padding: 12px 0; }
+  details.settings label:not(.check) { display: block; margin: 10px 0 4px; color: var(--sub); }
 
-  /* 레시피 화면: 옆으로 넘기는 카드 */
-  #recipe { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--bg); }
-  .top { display: flex; align-items: center; gap: 8px; padding: calc(8px + env(safe-area-inset-top)) 12px 8px; }
-  .top .rt { flex: 1; min-width: 0; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .top .count { color: var(--sub); font-variant-numeric: tabular-nums; font-size: 15px; padding-right: 4px; }
-  .deck {
-    flex: 1; min-height: 0; display: flex; overflow-x: auto; overflow-y: hidden;
-    scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain;
-  }
-  .deck::-webkit-scrollbar { display: none; }
-  .slide { flex: 0 0 100%; min-width: 0; display: flex; padding: 2px 12px 8px; scroll-snap-align: start; scroll-snap-stop: always; }
-  .slide > .card { flex: 1; min-width: 0; overflow-y: auto; overscroll-behavior-y: contain; display: flex; flex-direction: column; }
-  .bottom { display: flex; align-items: center; gap: 12px; padding: 6px 12px calc(10px + env(safe-area-inset-bottom)); }
-  .bottom button { min-width: 80px; min-height: 52px; }
-  .bottom .mid { flex: 1; min-width: 0; text-align: center; font-size: 14px; color: var(--sub); }
-  .bar { height: 6px; background: var(--soft); border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
-  .bar i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .2s; }
-
-  .thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 12px; display: block; background: var(--soft); flex: none; }
-  .pin { position: relative; flex: none; margin: 0 12px 8px; aspect-ratio: 16/9; max-height: 38vh; border-radius: 12px; overflow: hidden; background: #000; }
-  .pin iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-  .playbtn { position: relative; display: block; width: 100%; min-height: 0; padding: 0; border: 0; border-radius: 12px; overflow: hidden; background: none; flex: none; }
-  .playbtn .play { position: absolute; left: 50%; top: 50%; width: 68px; height: 68px; margin: -34px 0 0 -34px; border-radius: 50%; background: rgba(0, 0, 0, .62); }
-  .playbtn .play::after { content: ""; position: absolute; left: 27px; top: 20px; border-style: solid; border-width: 14px 0 14px 22px; border-color: transparent transparent transparent #fff; }
-  .top #closeVid { font-size: 14px; padding: 6px 10px; min-height: 40px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
-  .chip { font-size: 14px; padding: 5px 10px; border-radius: 6px; background: var(--accent-soft); color: var(--accent-ink); }
-  .chip.tag { background: var(--soft); color: var(--sub); }
-  .src { display: inline-block; font-size: 15px; color: var(--accent); padding: 10px 0; }
-  .spacer { flex: 1; }
-  .swipe { text-align: center; color: var(--sub); font-size: 15px; margin: 12px 0 0; }
-
-  .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  .stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-  .stepper button { border: 0; border-radius: 0; width: 52px; min-height: 48px; padding: 0; font-size: 22px; line-height: 1; }
-  .stepper output { padding: 0 8px; min-width: 64px; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
-  .tools { display: flex; gap: 8px; margin: 12px 0 4px; }
-  .tools button { font-size: 15px; flex: 1; }
-  ul.list { list-style: none; margin: 4px 0 0; padding: 0; }
-  .list li { border-top: 1px solid var(--line); }
-  .list li:first-child { border-top: 0; }
-  .list label { display: flex; gap: 14px; padding: 14px 0; min-height: 52px; cursor: pointer; align-items: flex-start; -webkit-tap-highlight-color: transparent; }
-  .list input[type=checkbox] { width: 24px; height: 24px; margin: 2px 0 0; accent-color: var(--ok); flex: none; }
-  .list .done { color: var(--sub); text-decoration: line-through; }
-  .qty { font-weight: 700; font-variant-numeric: tabular-nums; }
-  .note { display: block; font-size: 14px; color: var(--sub); }
-  .est { font-size: 11px; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; color: var(--sub); margin-left: 6px; vertical-align: 1px; }
-
-  .stepnum { color: var(--accent); font-weight: 700; font-size: 15px; }
-  .stepnum b { font-size: 44px; line-height: 1; letter-spacing: -0.03em; margin-right: 8px; font-variant-numeric: tabular-nums; }
-  .steptext { font-size: 24px; line-height: 1.5; letter-spacing: -0.02em; margin: 16px 0; word-break: keep-all; overflow-wrap: anywhere; }
-  .steptext.done { color: var(--sub); }
-  .donebtn { width: 100%; min-height: 56px; font-weight: 600; flex: none; }
-  .donebtn.on { background: var(--ok); border-color: var(--ok); color: #fff; }
+  /* 대화상자 */
+  dialog { border: 1px solid var(--line); border-radius: 16px; background: var(--card); color: var(--ink); padding: 18px 16px; width: min(92vw, 480px); max-height: 86dvh; }
+  dialog::backdrop { background: rgba(0, 0, 0, .5); }
+  dialog h3:focus { outline: none; }
+  dialog label { display: block; margin: 14px 0 6px; color: var(--sub); font-size: 15px; }
+  dialog .who { margin: 6px 0 0; font-weight: 600; }
+  .seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .seg button { padding: 8px 0; }
+  .seg button[aria-pressed=true] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .dlgbtns { display: flex; gap: 8px; margin-top: 18px; }
+  .dlgbtns button { flex: 1; }
+  #pickQ { margin-top: 12px; }
+  #pickList { max-height: 48dvh; overflow-y: auto; }
+  .toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 10; width: max-content; max-width: 90vw; padding: 10px 16px; border-radius: 10px; background: var(--ink); color: var(--bg); font-size: 15px; text-align: center; }
   @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
 </style>
 </head>
 <body>
-
-<main id="home">
-  <h1>영상 <span>레시피</span></h1>
-  <form id="form">
-    <div class="row">
-      <input id="url" type="url" placeholder="유튜브 영상 링크 붙여넣기" aria-label="유튜브 영상 링크" required>
-      <button class="primary" id="go" type="submit">레시피 만들기</button>
-    </div>
-  </form>
-
-  <details class="settings" id="settings">
-    <summary>설정 (API 키 · 모델)</summary>
-    <label for="key">Gemini API 키</label>
-    <div class="row">
-      <input id="key" type="password" autocomplete="off" placeholder="AI Studio에서 발급한 키">
-      <button type="button" id="saveKey">저장</button>
-    </div>
-    <p class="hint">키는 이 브라우저에만 저장되고, 구글 Gemini API로만 전송됩니다.</p>
-    <label for="model">모델</label>
-    <select id="model"></select>
-    <input id="modelManual" type="text" placeholder="모델 ID 직접 입력" hidden>
-    <label for="think">추론 수준</label>
-    <select id="think">
-      <option value="">모델 기본값</option>
-      <option value="low">낮음</option>
-      <option value="medium">중간</option>
-      <option value="high">높음</option>
-    </select>
-    <label class="check"><input type="checkbox" id="lowRes" checked> 저해상도로 분석 (토큰 절약)</label>
-  </details>
-
-  <div class="msg" id="msg" role="status"></div>
-
-  <section class="card" id="histCard" hidden>
-    <h3>저장된 레시피</h3>
-    <ul class="history" id="hist"></ul>
-  </section>
-</main>
-
-<div id="recipe" hidden>
-  <div class="top">
-    <button type="button" id="back" aria-label="목록으로 돌아가기">← 목록</button>
+<div id="app">
+  <header class="top" id="rhead" hidden>
     <div class="rt" id="rtitle"></div>
-    <button type="button" id="closeVid" hidden>영상 닫기</button>
-    <div class="count" id="count"></div>
-  </div>
+    <button type="button" id="vidBtn">영상 보기</button>
+    <button type="button" id="planAdd">식단에 추가</button>
+  </header>
   <div class="pin" id="pin" hidden></div>
-  <div class="deck" id="deck"></div>
-  <div class="bottom">
-    <button type="button" id="prev">이전</button>
-    <div class="mid"><div class="bar"><i id="barFill"></i></div><span id="progText"></span></div>
-    <button type="button" id="next">다음</button>
-  </div>
+
+  <main id="view">
+    <!-- 1 재료 -->
+    <section id="tabI" hidden>
+      <div class="blank" id="emptyI">고른 레시피가 없습니다.<br><button type="button" class="toBook">레시피북 열기</button></div>
+      <div id="bodyI">
+        <div class="ibar">
+          <div class="stepper">
+            <button type="button" id="minus" aria-label="인분 줄이기">−</button>
+            <output id="serv"></output>
+            <button type="button" id="plus" aria-label="인분 늘리기">+</button>
+          </div>
+          <button type="button" id="baseServ" hidden>원래대로</button>
+          <span class="sp"></span>
+          <button type="button" id="copy">복사</button>
+        </div>
+        <ul id="ings"></ul>
+      </div>
+    </section>
+
+    <!-- 2 레시피 -->
+    <section id="tabS" hidden>
+      <div class="blank" id="emptyS">고른 레시피가 없습니다.<br><button type="button" class="toBook">레시피북 열기</button></div>
+      <div id="bodyS">
+        <div class="chips" id="meta"></div>
+        <div class="prog"><div class="bar"><i id="barFill"></i></div><span id="progText"></span></div>
+        <ol id="steps"></ol>
+        <div class="sfoot">
+          <label class="check" id="wakeWrap" hidden><input type="checkbox" id="wake"> 화면 켜 두기</label>
+          <span class="sp"></span>
+          <button type="button" id="resetChecks">체크 지우기</button>
+        </div>
+        <a class="src" id="src" target="_blank" rel="noopener">유튜브에서 원본 영상 보기</a>
+      </div>
+    </section>
+
+    <!-- 3 식단 -->
+    <section id="tabP" hidden>
+      <div class="weekhead">
+        <div id="wkLabel"></div>
+        <button type="button" id="wkPrev" aria-label="이전 주">‹</button>
+        <button type="button" id="wkToday">오늘</button>
+        <button type="button" id="wkNext" aria-label="다음 주">›</button>
+      </div>
+      <div class="week" id="week"></div>
+      <h3 id="dayLabel"></h3>
+      <div id="meals"></div>
+    </section>
+
+    <!-- 4 레시피북 -->
+    <section id="tabB" hidden>
+      <h1>영상 <span>레시피</span></h1>
+      <form id="form">
+        <div class="row">
+          <input id="url" type="url" placeholder="유튜브 영상 링크 붙여넣기" aria-label="유튜브 영상 링크" required>
+          <button class="primary" id="go" type="submit">레시피 만들기</button>
+        </div>
+      </form>
+      <div class="msg" id="msg" role="status"></div>
+
+      <section class="card" id="histCard" hidden>
+        <h3>저장된 레시피</h3>
+        <input type="search" id="bookQ" placeholder="이름, 재료로 검색" aria-label="저장된 레시피 검색">
+        <ul class="history" id="hist"></ul>
+      </section>
+
+      <details class="settings" id="settings">
+        <summary>설정 (API 키 · 모델)</summary>
+        <label for="key">Gemini API 키</label>
+        <div class="row">
+          <input id="key" type="password" autocomplete="off" placeholder="AI Studio에서 발급한 키">
+          <button type="button" id="saveKey">저장</button>
+        </div>
+        <p class="hint">키는 이 브라우저에만 저장되고, 구글 Gemini API로만 전송됩니다.</p>
+        <label for="model">모델</label>
+        <select id="model"></select>
+        <input id="modelManual" type="text" placeholder="모델 ID 직접 입력" hidden>
+        <label for="think">추론 수준</label>
+        <select id="think">
+          <option value="">모델 기본값</option>
+          <option value="low">낮음</option>
+          <option value="medium">중간</option>
+          <option value="high">높음</option>
+        </select>
+        <label class="check"><input type="checkbox" id="lowRes" checked> 저해상도로 분석 (토큰 절약)</label>
+      </details>
+    </section>
+  </main>
+
+  <nav class="tabs" aria-label="화면 전환">
+    <button type="button" data-tab="I">재료</button>
+    <button type="button" data-tab="S">레시피</button>
+    <button type="button" data-tab="P">식단</button>
+    <button type="button" data-tab="B">레시피북</button>
+  </nav>
 </div>
+
+<dialog id="dlgAdd" aria-labelledby="addHead">
+  <h3 id="addHead" tabindex="-1" autofocus>식단에 추가</h3>
+  <p class="who" id="addTitle"></p>
+  <label for="addDate">날짜</label>
+  <input type="date" id="addDate">
+  <label id="addMealLabel">끼니</label>
+  <div class="seg" id="addMeal" role="group" aria-labelledby="addMealLabel"></div>
+  <div class="dlgbtns">
+    <button type="button" id="addCancel">취소</button>
+    <button type="button" class="primary" id="addOk">추가</button>
+  </div>
+</dialog>
+
+<dialog id="dlgPick" aria-labelledby="pickHead">
+  <h3 id="pickHead" tabindex="-1" autofocus></h3>
+  <input type="search" id="pickQ" placeholder="레시피 이름, 재료로 검색" aria-label="레시피 검색">
+  <ul class="history" id="pickList"></ul>
+  <div class="dlgbtns"><button type="button" id="pickClose">닫기</button></div>
+</dialog>
 
 <script>
 const API = 'https://generativelanguage.googleapis.com/v1beta';
@@ -205,6 +305,15 @@ function msg(text, kind = 'info') {
   const m = $('msg');
   m.textContent = text || '';
   m.className = 'msg' + (text ? ' show ' + kind : '');
+}
+let toastTimer = null;
+function toast(text) {
+  document.querySelector('.toast')?.remove();
+  const t = el('div', { className: 'toast', textContent: text });
+  t.setAttribute('role', 'status');
+  document.body.append(t);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.remove(), 2500);
 }
 
 /* ---------- 설정 ---------- */
@@ -287,10 +396,9 @@ const PROMPT = `이 요리 영상을 보고 레시피를 한국어로 정리해 
 - ingredients: 영상에 등장한 순서대로 모든 재료.
   amount는 반드시 숫자(반 개는 0.5), unit은 "모", "큰술", "작은술", "g", "ml", "개", "줌", "꼬집" 같은 단위.
   "약간", "적당량"처럼 수량이 없는 재료는 amount와 unit을 null로.
-  note에는 손질 방법, 대체 재료, 그램 환산 등 보충 설명을 짧게. 없으면 null.
+  note에는 손질 방법, 대체 재료, 그램 환산 등 보충 설명을 10자 안팎으로 아주 짧게. 없으면 null.
   영상에서 분량을 직접 말하거나 자막으로 보여주지 않아 어림한 값이면 estimated를 true로.
-- steps: 조리 순서. 한 단계에 한 동작씩, 불 세기와 시간 포함. 번호는 붙이지 말 것.
-  한 단계는 휴대폰 화면 한 장에 크게 보이도록 두세 문장 이내로.
+- steps: 조리 순서. 한 단계에 한 동작씩, 불 세기와 시간 포함. 번호는 붙이지 말 것. 한 단계는 두세 문장 이내로.
 영상이 요리 영상이 아니면 title을 "레시피 없음"으로 하고 나머지는 비워 주세요.`;
 
 async function callGemini(videoUrl, lowRes, think, attempt = 0) {
@@ -344,11 +452,11 @@ $('form').onsubmit = async ev => {
   try {
     const data = await callGemini('https://www.youtube.com/watch?v=' + id, $('lowRes').checked, $('think').value);
     if (!data.ingredients?.length || !data.steps?.length) throw new Error('이 영상에서 레시피를 찾지 못했습니다.');
-    const rec = { id, data, serv: data.servings || 1, ing: [], step: [], pos: 0, at: Date.now() };
+    const rec = { id, data, serv: data.servings || 1, ing: [], step: [], at: Date.now() };
     saveRecipe(rec);
     msg('');
     $('url').value = '';
-    show(rec);
+    openRecipe(rec);
   } catch (e) {
     const hint = e.status === 503 || e.status === 500 ? '모델에 요청이 몰려 세 번 다시 시도했지만 응답이 없습니다. 잠시 뒤 다시 누르거나 설정에서 다른 모델을 고르세요. '
       : e.status === 429 ? '사용 한도를 넘었습니다. 잠시 뒤 다시 시도하거나 설정에서 다른 모델을 고르세요. '
@@ -362,30 +470,46 @@ $('form').onsubmit = async ev => {
 
 /* ---------- 저장 ---------- */
 let recipes = store.get('rc_recipes', []);
-let cur = null;
+let cur = recipes.find(r => r.id === store.get('rc_cur', '')) || null;
+let tab = 'B';
 const thumbUrl = id => 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg';
+const persist = () => store.set('rc_recipes', recipes);
 function saveRecipe(rec) {
   recipes = [rec, ...recipes.filter(r => r.id !== rec.id)].slice(0, 200);
-  store.set('rc_recipes', recipes);
+  persist();
   renderHistory();
 }
-const persist = () => store.set('rc_recipes', recipes);
+const matches = (r, q) => !q ||
+  [r.data.title, ...(r.data.tags || []), ...r.data.ingredients.map(i => i.name)].join(' ').toLowerCase().includes(q);
+function recipeLink(r, onOpen) {
+  const a = el('a', { href: '#' },
+    el('img', { src: thumbUrl(r.id), alt: '', loading: 'lazy' }),
+    el('span', { className: 'ht', textContent: r.data.title }));
+  a.onclick = e => { e.preventDefault(); onOpen(); };
+  return a;
+}
+
+/* ---------- 4 레시피북 ---------- */
 function renderHistory() {
   $('histCard').hidden = !recipes.length;
-  $('hist').replaceChildren(...recipes.map(r => {
-    const a = el('a', { href: '#' },
-      el('img', { src: thumbUrl(r.id), alt: '', loading: 'lazy' }),
-      el('span', { className: 'ht', textContent: r.data.title }));
-    a.onclick = e => { e.preventDefault(); show(r); };
+  const list = recipes.filter(r => matches(r, $('bookQ').value.trim().toLowerCase()));
+  if (!list.length) return $('hist').replaceChildren(el('li', { className: 'empty', textContent: '검색 결과가 없습니다' }));
+  $('hist').replaceChildren(...list.map(r => {
+    const pl = el('button', { type: 'button', textContent: '식단' });
+    pl.setAttribute('aria-label', r.data.title + ' 식단에 추가');
+    pl.onclick = () => openAdd(r);
     const del = el('button', { type: 'button', textContent: '삭제' });
     del.setAttribute('aria-label', r.data.title + ' 삭제');
     del.onclick = () => {
       if (!confirm('"' + r.data.title + '" 레시피를 삭제할까요?')) return;
-      recipes = recipes.filter(x => x !== r); persist(); renderHistory();
+      recipes = recipes.filter(x => x !== r); persist();
+      if (cur === r) setCurrent(null);
+      renderHistory();
     };
-    return el('li', {}, a, del);
+    return el('li', {}, recipeLink(r, () => openRecipe(r)), pl, del);
   }));
 }
+$('bookQ').oninput = renderHistory;
 
 /* ---------- 수량 표시 ---------- */
 const FRACS = [[0.25, '¼'], [1 / 3, '⅓'], [0.5, '½'], [2 / 3, '⅔'], [0.75, '¾']];
@@ -400,57 +524,31 @@ function fmt(n) {
 }
 const qtyText = (i, ratio) => i.amount == null ? (i.unit || '적당량') : fmt(i.amount * ratio) + (i.unit ? ' ' + i.unit : '');
 
-/* ---------- 화면 켜짐 유지 ---------- */
-let wakeLock = null, wakeOn = false;
-async function setWake(on) {
-  wakeOn = on;
-  try {
-    if (on) wakeLock = await navigator.wakeLock.request('screen');
-    else { await wakeLock?.release(); wakeLock = null; }
-  } catch { wakeOn = false; }
-  return wakeOn;
+/* ---------- 현재 레시피 ---------- */
+function setCurrent(r) {
+  if (cur !== r) stopVideo();
+  cur = r;
+  store.set('rc_cur', r ? r.id : '');
+  renderRecipe();
 }
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && wakeOn && cur) setWake(true);
-});
+function openRecipe(r) { setCurrent(r); setTab('I'); }
+function renderRecipe() {
+  for (const k of ['I', 'S']) { $('empty' + k).hidden = !!cur; $('body' + k).hidden = !cur; }
+  document.title = cur ? cur.data.title + ' · 영상 레시피' : '영상 레시피';
+  updateHead();
+  if (!cur) return;
+  $('rtitle').textContent = cur.data.title;
+  renderIngs(); renderSteps();
+}
+function updateHead() {
+  const on = !!cur && (tab === 'I' || tab === 'S');
+  $('rhead').hidden = !on;
+  if (!on) stopVideo();
+}
+for (const b of document.querySelectorAll('.toBook')) b.onclick = () => setTab('B');
+$('planAdd').onclick = () => openAdd(cur);
 
-/* ---------- 레시피 화면 ---------- */
-const deck = $('deck');
-const slide = (cls, ...kids) => el('section', { className: 'slide' }, el('div', { className: 'card ' + cls }, ...kids));
-const smooth = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
-const goTo = i => deck.scrollTo({ left: i * deck.clientWidth, behavior: smooth() });
-const slideCount = () => cur.data.steps.length + 2;
-
-function show(rec, push = true) {
-  cur = rec;
-  const d = rec.data;
-  $('home').hidden = true; $('recipe').hidden = false;
-  $('rtitle').textContent = d.title;
-  document.title = d.title + ' · 영상 레시피';
-  deck.replaceChildren(overviewSlide(), ingSlide(), ...d.steps.map(stepSlide));
-  renderIngs(); progress();
-  const start = Math.min(rec.pos || 0, slideCount() - 1);
-  requestAnimationFrame(() => { deck.scrollLeft = start * deck.clientWidth; updatePos(); });
-  if (push) history.pushState({ recipe: true }, '');
-}
-function closeRecipe() {
-  stopVideo();
-  cur = null; setWake(false);
-  $('recipe').hidden = true; $('home').hidden = false;
-  document.title = '영상 레시피';
-  renderHistory();
-}
-$('back').onclick = () => history.state?.recipe ? history.back() : closeRecipe();
-addEventListener('popstate', () => { if (cur) closeRecipe(); });
-
-function playButton() {
-  const btn = el('button', { type: 'button', className: 'playbtn', id: 'playBtn', hidden: !$('pin').hidden },
-    el('img', { className: 'thumb', src: thumbUrl(cur.id), alt: '' }),
-    el('span', { className: 'play' }));
-  btn.setAttribute('aria-label', cur.data.title + ' 영상 재생');
-  btn.onclick = playVideo;
-  return btn;
-}
+/* 영상: 재료·레시피 탭 위에 고정 */
 function playVideo() {
   const f = el('iframe', {
     src: 'https://www.youtube-nocookie.com/embed/' + cur.id + '?autoplay=1&playsinline=1&rel=0',
@@ -458,71 +556,24 @@ function playVideo() {
   });
   f.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen');
   $('pin').replaceChildren(f);
-  $('pin').hidden = false; $('closeVid').hidden = false;
-  const b = $('playBtn'); if (b) b.hidden = true;
-  keepPos();
+  $('pin').hidden = false;
+  $('vidBtn').textContent = '영상 닫기';
+  fitIngs();
 }
 function stopVideo() {
+  if ($('pin').hidden) return;
   $('pin').replaceChildren();
-  $('pin').hidden = true; $('closeVid').hidden = true;
-  const b = $('playBtn'); if (b) b.hidden = false;
-  keepPos();
+  $('pin').hidden = true;
+  $('vidBtn').textContent = '영상 보기';
+  fitIngs();
 }
-const keepPos = () => { if (cur) requestAnimationFrame(() => { deck.scrollLeft = (cur.pos || 0) * deck.clientWidth; }); };
-$('closeVid').onclick = stopVideo;
+$('vidBtn').onclick = () => $('pin').hidden ? playVideo() : stopVideo();
 
-function overviewSlide() {
-  const d = cur.data, meta = [];
-  if (d.prepMinutes) meta.push('준비 ' + d.prepMinutes + '분');
-  if (d.cookMinutes) meta.push('조리 ' + d.cookMinutes + '분');
-  meta.push('기준 ' + d.servings + '인분');
-  meta.push('재료 ' + d.ingredients.length + '가지');
-  let wake = null;
-  if ('wakeLock' in navigator) {
-    const cb = el('input', { type: 'checkbox', checked: wakeOn });
-    cb.onchange = async () => { cb.checked = await setWake(cb.checked); };
-    wake = el('label', { className: 'check' }, cb, ' 요리하는 동안 화면 켜 두기');
-  }
-  const reset = el('button', { type: 'button', textContent: '체크 전부 지우기' });
-  reset.onclick = () => { cur.ing = []; cur.step = []; persist(); const r = cur; show(r, false); };
-  return slide('',
-    playButton(),
-    el('h2', { textContent: d.title }),
-    el('div', { className: 'chips' }, meta.map(t => el('span', { className: 'chip', textContent: t }))),
-    el('div', { className: 'chips' }, (d.tags || []).map(t => el('span', { className: 'chip tag', textContent: '#' + t.replace(/^#/, '') }))),
-    el('div', {}, el('a', { className: 'src', href: 'https://www.youtube.com/watch?v=' + cur.id, target: '_blank', rel: 'noopener', textContent: '원본 영상 보기' })),
-    wake,
-    el('div', { className: 'spacer' }),
-    reset,
-    el('p', { className: 'swipe', textContent: '옆으로 밀면 재료와 조리 단계가 한 장씩 나옵니다' }));
-}
-
-function ingSlide() {
-  const minus = el('button', { type: 'button', textContent: '−' }); minus.setAttribute('aria-label', '인분 줄이기');
-  const plus = el('button', { type: 'button', textContent: '+' }); plus.setAttribute('aria-label', '인분 늘리기');
-  minus.onclick = () => setServ(cur.serv - 1);
-  plus.onclick = () => setServ(cur.serv + 1);
-  const copy = el('button', { type: 'button', textContent: '전체 복사' });
-  copy.onclick = async () => {
-    const d = cur.data, ratio = cur.serv / (d.servings || 1);
-    const text = `${d.title} 재료 (${cur.serv}인분)\n` +
-      d.ingredients.map(i => `- ${i.name} ${qtyText(i, ratio)}${i.note ? ' (' + i.note + ')' : ''}`).join('\n');
-    try { await navigator.clipboard.writeText(text); copy.textContent = '복사됨'; }
-    catch { copy.textContent = '복사 실패'; }
-    setTimeout(() => copy.textContent = '전체 복사', 1500);
-  };
-  const reset = el('button', { type: 'button', textContent: '원래 분량으로' });
-  reset.onclick = () => setServ(cur.data.servings || 1);
-  return slide('',
-    el('div', { className: 'head' }, el('h3', { textContent: '재료' }),
-      el('div', { className: 'stepper' }, minus, el('output', { id: 'serv' }), plus)),
-    el('div', { className: 'tools' }, copy, reset),
-    el('ul', { className: 'list', id: 'ings' }),
-    el('p', { className: 'hint', textContent: '"추정"은 영상에서 정확한 분량을 말하지 않아 AI가 어림한 값입니다.' }));
-}
+/* ---------- 1 재료 ---------- */
 function renderIngs() {
-  const d = cur.data, ratio = cur.serv / (d.servings || 1);
+  const d = cur.data, base = d.servings || 1, ratio = cur.serv / base;
   $('serv').textContent = cur.serv + '인분';
+  $('baseServ').hidden = cur.serv === base;
   $('ings').replaceChildren(...d.ingredients.map((i, n) => {
     const cb = el('input', { type: 'checkbox', checked: !!cur.ing[n] });
     const text = el('span', { className: cur.ing[n] ? 'done' : '' },
@@ -532,54 +583,202 @@ function renderIngs() {
     cb.onchange = () => { cur.ing[n] = cb.checked; text.className = cb.checked ? 'done' : ''; persist(); };
     return el('li', {}, el('label', {}, cb, text));
   }));
+  fitIngs();
 }
+/* 한 화면에 안 들어오면 2열로 */
+function fitIngs() {
+  const ul = $('ings'), view = $('view');
+  ul.classList.remove('two');
+  if (tab === 'I' && cur && view.scrollHeight > view.clientHeight + 2) ul.classList.add('two');
+}
+addEventListener('resize', fitIngs);
 function setServ(n) { cur.serv = Math.min(50, Math.max(1, n)); persist(); renderIngs(); }
+$('minus').onclick = () => setServ(cur.serv - 1);
+$('plus').onclick = () => setServ(cur.serv + 1);
+$('baseServ').onclick = () => setServ(cur.data.servings || 1);
+$('copy').onclick = async () => {
+  const d = cur.data, ratio = cur.serv / (d.servings || 1);
+  const text = `${d.title} 재료 (${cur.serv}인분)\n` +
+    d.ingredients.map(i => `- ${i.name} ${qtyText(i, ratio)}${i.note ? ' (' + i.note + ')' : ''}`).join('\n');
+  try { await navigator.clipboard.writeText(text); toast('재료를 복사했습니다'); }
+  catch { toast('복사하지 못했습니다'); }
+};
 
-function stepSlide(s, n) {
-  const total = cur.data.steps.length;
-  const text = el('p', { className: 'steptext', textContent: s });
-  const btn = el('button', { type: 'button', className: 'donebtn' });
-  const paint = () => {
-    const on = !!cur.step[n];
-    btn.textContent = on ? '완료함 · 누르면 취소' : (n < total - 1 ? '완료하고 다음 단계로' : '완료');
-    btn.classList.toggle('on', on);
-    text.classList.toggle('done', on);
-  };
-  btn.onclick = () => {
-    cur.step[n] = !cur.step[n]; persist(); paint(); progress();
-    if (cur.step[n] && n < total - 1) goTo(n + 3);
-  };
-  paint();
-  return slide('',
-    el('div', { className: 'stepnum' }, el('b', { textContent: n + 1 }), `/ ${total}단계`),
-    text, el('div', { className: 'spacer' }), btn);
+/* ---------- 2 레시피 ---------- */
+function renderSteps() {
+  const d = cur.data, meta = [];
+  if (d.prepMinutes) meta.push('준비 ' + d.prepMinutes + '분');
+  if (d.cookMinutes) meta.push('조리 ' + d.cookMinutes + '분');
+  meta.push('기준 ' + d.servings + '인분');
+  $('meta').replaceChildren(
+    ...meta.map(t => el('span', { className: 'chip', textContent: t })),
+    ...(d.tags || []).map(t => el('span', { className: 'chip tag', textContent: '#' + t.replace(/^#/, '') })));
+  $('src').href = 'https://www.youtube.com/watch?v=' + cur.id;
+  $('steps').replaceChildren(...d.steps.map((s, n) => {
+    const cb = el('input', { type: 'checkbox', checked: !!cur.step[n] });
+    const label = el('label', { className: cur.step[n] ? 'done' : '' }, cb,
+      el('span', { className: 'num', textContent: n + 1 }), el('span', { className: 'txt', textContent: s }));
+    cb.onchange = () => { cur.step[n] = cb.checked; label.className = cb.checked ? 'done' : ''; persist(); progress(); };
+    return el('li', {}, label);
+  }));
+  progress();
 }
 function progress() {
   const total = cur.data.steps.length, done = cur.data.steps.filter((_, n) => cur.step[n]).length;
   $('barFill').style.width = (total ? Math.round(done / total * 100) : 0) + '%';
-  $('progText').textContent = `${total}단계 중 ${done}단계 완료`;
+  $('progText').textContent = `${done} / ${total} 단계`;
 }
+$('resetChecks').onclick = () => { cur.ing = []; cur.step = []; persist(); renderIngs(); renderSteps(); toast('체크를 모두 지웠습니다'); };
 
-function updatePos() {
-  if (!cur || !deck.clientWidth) return;
-  const n = slideCount(), i = Math.max(0, Math.min(n - 1, Math.round(deck.scrollLeft / deck.clientWidth)));
-  $('count').textContent = `${i + 1} / ${n}`;
-  $('prev').disabled = i === 0;
-  $('next').disabled = i === n - 1;
-  if (cur.pos !== i) { cur.pos = i; persist(); }
-  return i;
+/* 화면 켜 두기 */
+let wakeLock = null, wakeOn = false;
+if ('wakeLock' in navigator) $('wakeWrap').hidden = false;
+async function setWake(on) {
+  wakeOn = on;
+  try {
+    if (on) wakeLock = await navigator.wakeLock.request('screen');
+    else { await wakeLock?.release(); wakeLock = null; }
+  } catch { wakeOn = false; }
+  $('wake').checked = wakeOn;
 }
-let ticking = false;
-deck.addEventListener('scroll', () => {
-  if (ticking) return;
-  ticking = true;
-  requestAnimationFrame(() => { ticking = false; updatePos(); });
-}, { passive: true });
-$('prev').onclick = () => goTo(updatePos() - 1);
-$('next').onclick = () => goTo(updatePos() + 1);
-addEventListener('resize', () => { if (cur) deck.scrollLeft = (cur.pos || 0) * deck.clientWidth; });
+$('wake').onchange = () => setWake($('wake').checked);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && wakeOn) setWake(true);
+});
+
+/* ---------- 3 식단 ---------- */
+const MEALS = [['b', '조식'], ['l', '중식'], ['d', '석식'], ['s', '간식']];
+const mealName = k => MEALS.find(m => m[0] === k)[1];
+const DOW = '일월화수목금토';
+let plan = store.get('rc_plan', {});
+const savePlan = () => store.set('rc_plan', plan);
+const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const parseDate = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const dateLabel = s => { const d = parseDate(s); return `${d.getMonth() + 1}월 ${d.getDate()}일 (${DOW[d.getDay()]})`; };
+let selDate = iso(new Date());
+
+const planItems = (date, k) => ((plan[date] || {})[k] || []).map(id => recipes.find(r => r.id === id)).filter(Boolean);
+const dayCount = date => MEALS.reduce((n, [k]) => n + planItems(date, k).length, 0);
+function addToPlan(date, k, id) {
+  const day = plan[date] || (plan[date] = {});
+  const arr = day[k] || (day[k] = []);
+  if (!arr.includes(id)) arr.push(id);
+  savePlan();
+}
+function removeFromPlan(date, k, id) {
+  if (!plan[date]?.[k]) return;
+  plan[date][k] = plan[date][k].filter(x => x !== id);
+  if (MEALS.every(([m]) => !(plan[date][m] || []).length)) delete plan[date];
+  savePlan();
+}
+function renderPlan() {
+  const sel = parseDate(selDate), start = new Date(sel), today = iso(new Date());
+  start.setDate(sel.getDate() - (sel.getDay() + 6) % 7);
+  const end = new Date(start); end.setDate(start.getDate() + 6);
+  $('wkLabel').textContent = `${start.getMonth() + 1}월 ${start.getDate()}일 – ` +
+    (end.getMonth() === start.getMonth() ? '' : `${end.getMonth() + 1}월 `) + `${end.getDate()}일`;
+  $('week').replaceChildren(...[0, 1, 2, 3, 4, 5, 6].map(i => {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    const s = iso(d), has = dayCount(s) > 0;
+    const b = el('button', { type: 'button', className: [s === selDate ? 'sel' : '', s === today ? 'today' : '', has ? 'has' : ''].join(' ') },
+      DOW[d.getDay()], el('b', { textContent: d.getDate() }), el('i'));
+    b.setAttribute('aria-label', dateLabel(s) + (s === today ? ', 오늘' : '') + (has ? ', 식단 있음' : ''));
+    if (s === selDate) b.setAttribute('aria-current', 'date');
+    b.onclick = () => { selDate = s; renderPlan(); };
+    return b;
+  }));
+  $('dayLabel').textContent = dateLabel(selDate) + (selDate === today ? ' · 오늘' : '');
+  $('meals').replaceChildren(...MEALS.map(([k, name]) => {
+    const items = planItems(selDate, k);
+    const add = el('button', { type: 'button', textContent: items.length ? '+ 추가' : '+ 레시피 추가', className: items.length ? '' : 'slot' });
+    add.setAttribute('aria-label', name + '에 레시피 추가');
+    add.onclick = () => openPick(selDate, k);
+    return el('section', { className: 'card meal' },
+      el('div', { className: 'head' }, el('h3', { textContent: name }), items.length ? add : null),
+      !items.length ? add : el('ul', { className: 'history' }, items.map(r => {
+        const rm = el('button', { type: 'button', textContent: '빼기' });
+        rm.setAttribute('aria-label', r.data.title + ' ' + name + '에서 빼기');
+        rm.onclick = () => { removeFromPlan(selDate, k, r.id); renderPlan(); };
+        return el('li', {}, recipeLink(r, () => openRecipe(r)), rm);
+      })));
+  }));
+}
+const shiftDays = n => { const d = parseDate(selDate); d.setDate(d.getDate() + n); selDate = iso(d); renderPlan(); };
+$('wkPrev').onclick = () => shiftDays(-7);
+$('wkNext').onclick = () => shiftDays(7);
+$('wkToday').onclick = () => { selDate = iso(new Date()); renderPlan(); };
+
+/* 식단 탭에서: 레시피 검색해서 추가 */
+let pickCtx = null;
+function openPick(date, k) {
+  pickCtx = { date, k };
+  $('pickHead').textContent = `${dateLabel(date)} ${mealName(k)}에 추가`;
+  $('pickQ').value = '';
+  renderPick();
+  $('dlgPick').showModal();
+}
+function renderPick() {
+  const list = recipes.filter(r => matches(r, $('pickQ').value.trim().toLowerCase()));
+  if (!list.length) {
+    return $('pickList').replaceChildren(el('li', { className: 'empty',
+      textContent: recipes.length ? '검색 결과가 없습니다' : '저장된 레시피가 없습니다. 레시피북에서 먼저 만들어 주세요.' }));
+  }
+  $('pickList').replaceChildren(...list.map(r => el('li', {}, recipeLink(r, () => {
+    addToPlan(pickCtx.date, pickCtx.k, r.id);
+    $('dlgPick').close();
+    renderPlan();
+    toast(`${mealName(pickCtx.k)}에 "${r.data.title}" 추가`);
+  }))));
+}
+$('pickQ').oninput = renderPick;
+$('pickClose').onclick = () => $('dlgPick').close();
+
+/* 레시피에서: 날짜와 끼니 골라서 추가 */
+let addRec = null, addMeal = 'd';
+function paintMeal() {
+  $('addMeal').replaceChildren(...MEALS.map(([k, name]) => {
+    const b = el('button', { type: 'button', textContent: name });
+    b.setAttribute('aria-pressed', k === addMeal);
+    b.onclick = () => { addMeal = k; paintMeal(); };
+    return b;
+  }));
+}
+function openAdd(rec) {
+  addRec = rec;
+  const h = new Date().getHours();
+  addMeal = h < 10 ? 'b' : h < 14 ? 'l' : h < 20 ? 'd' : 's';
+  $('addTitle').textContent = rec.data.title;
+  $('addDate').value = selDate;
+  paintMeal();
+  $('dlgAdd').showModal();
+}
+$('addCancel').onclick = () => $('dlgAdd').close();
+$('addOk').onclick = () => {
+  const date = $('addDate').value;
+  if (!date) return $('addDate').focus();
+  addToPlan(date, addMeal, addRec.id);
+  selDate = date;
+  $('dlgAdd').close();
+  if (tab === 'P') renderPlan();
+  toast(`${dateLabel(date)} ${mealName(addMeal)}에 추가했습니다`);
+};
+
+/* ---------- 탭 ---------- */
+const tabButtons = [...document.querySelectorAll('.tabs button')];
+function setTab(t) {
+  tab = t; store.set('rc_tab', t);
+  for (const k of ['I', 'S', 'P', 'B']) $('tab' + k).hidden = k !== t;
+  for (const b of tabButtons) b.setAttribute('aria-pressed', b.dataset.tab === t);
+  updateHead();
+  if (t === 'P') renderPlan();
+  $('view').scrollTop = 0;
+  if (t === 'I') fitIngs();
+}
+for (const b of tabButtons) b.onclick = () => setTab(b.dataset.tab);
 
 renderHistory();
+renderRecipe();
+setTab(cur ? store.get('rc_tab', 'I') : 'B');
 loadModels();
 </script>
 </body>
