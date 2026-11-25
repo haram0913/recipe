@@ -130,6 +130,10 @@
   /* 4 레시피북 */
   #form .row { flex-direction: column; align-items: stretch; }
   #form button { min-height: 52px; }
+  .urlrow { display: flex; gap: 8px; }
+  .urlrow input { flex: 1; }
+  #form .urlrow button { font-size: 15px; }
+  .jobthumb { display: block; width: 100%; max-width: 260px; aspect-ratio: 16/9; object-fit: cover; border-radius: 10px; margin-top: 10px; background: var(--soft); }
   .msg { margin-top: 10px; padding: 12px 14px; border-radius: 10px; font-size: 15px; display: none; }
   .msg.show { display: block; }
   .msg.err { background: var(--accent-soft); color: var(--accent-ink); }
@@ -226,10 +230,14 @@
       <h1>영상 <span>레시피</span></h1>
       <form id="form">
         <div class="row">
-          <input id="url" type="url" placeholder="유튜브 영상 링크 붙여넣기" aria-label="유튜브 영상 링크" required>
+          <div class="urlrow">
+            <input id="url" type="text" inputmode="url" autocomplete="off" placeholder="유튜브 영상 링크" aria-label="유튜브 영상 링크">
+            <button type="button" id="paste">붙여넣기</button>
+          </div>
           <button class="primary" id="go" type="submit">레시피 만들기</button>
         </div>
       </form>
+      <img id="jobThumb" class="jobthumb" alt="분석 중인 영상" hidden>
       <div class="msg" id="msg" role="status"></div>
 
       <section class="card" id="histCard" hidden>
@@ -432,12 +440,15 @@ async function callGemini(videoUrl, lowRes, think, attempt = 0) {
   const text = (data.candidates?.[0]?.content?.parts || [])
     .filter(p => p.text && !p.thought).map(p => p.text).join('');
   if (!text) throw new Error('응답이 비어 있습니다' + (data.promptFeedback?.blockReason ? ' (' + data.promptFeedback.blockReason + ')' : ''));
+  const pt = data.usageMetadata?.promptTokenCount;
+  if (pt != null && pt < 900) throw new Error('모델이 영상을 받지 못한 채 답했습니다. 설정에서 다른 모델을 골라 다시 시도하세요.');
   return JSON.parse(text);
 }
 
 function videoId(url) {
-  const m = url.match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([\w-]{11})/);
-  return m ? m[1] : null;
+  /* 주소가 여러 개 섞여 있으면 마지막 것을 쓴다 */
+  const all = [...url.matchAll(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([\w-]{11})/g)];
+  return all.length ? all[all.length - 1][1] : null;
 }
 
 $('form').onsubmit = async ev => {
@@ -448,7 +459,11 @@ $('form').onsubmit = async ev => {
   if (!currentModel()) return msg('모델을 선택하세요.', 'err');
   const go = $('go');
   go.disabled = true; go.textContent = '분석 중…';
-  msg('영상을 분석하고 있습니다. 영상 길이에 따라 수십 초가 걸릴 수 있습니다.');
+  msg('아래 영상을 분석하고 있습니다. 수십 초가 걸릴 수 있으니, 끝날 때까지 다른 앱으로 나가지 말고 기다려 주세요.');
+  $('jobThumb').src = thumbUrl(id); $('jobThumb').hidden = false;
+  store.set('rc_pending', id);
+  let jobLock = null;
+  try { jobLock = await navigator.wakeLock?.request('screen'); } catch {}
   try {
     const data = await callGemini('https://www.youtube.com/watch?v=' + id, $('lowRes').checked, $('think').value);
     if (!data.ingredients?.length || !data.steps?.length) throw new Error('이 영상에서 레시피를 찾지 못했습니다.');
@@ -457,6 +472,7 @@ $('form').onsubmit = async ev => {
     msg('');
     $('url').value = '';
     openRecipe(rec);
+    toast(`"${data.title}" 레시피를 만들었습니다`);
   } catch (e) {
     const hint = e.status === 503 || e.status === 500 ? '모델에 요청이 몰려 세 번 다시 시도했지만 응답이 없습니다. 잠시 뒤 다시 누르거나 설정에서 다른 모델을 고르세요. '
       : e.status === 429 ? '사용 한도를 넘었습니다. 잠시 뒤 다시 시도하거나 설정에서 다른 모델을 고르세요. '
@@ -464,8 +480,19 @@ $('form').onsubmit = async ev => {
       : e.status === 402 ? '선불 잔액이 없습니다. ' : '';
     msg(hint + (e.message || '알 수 없는 오류'), 'err');
   } finally {
+    store.set('rc_pending', '');
+    $('jobThumb').hidden = true;
+    try { await jobLock?.release(); } catch {}
     go.disabled = false; go.textContent = '레시피 만들기';
   }
+};
+
+$('url').onfocus = () => $('url').select();
+$('paste').onclick = async () => {
+  try {
+    const t = (await navigator.clipboard.readText()).trim();
+    if (t) $('url').value = t; else toast('복사해 둔 링크가 없습니다');
+  } catch { toast('입력 칸을 길게 눌러 붙여넣어 주세요'); }
 };
 
 /* ---------- 저장 ---------- */
@@ -778,7 +805,15 @@ for (const b of tabButtons) b.onclick = () => setTab(b.dataset.tab);
 
 renderHistory();
 renderRecipe();
-setTab(cur ? store.get('rc_tab', 'I') : 'B');
+const pending = store.get('rc_pending', '');
+if (pending) {
+  /* 지난번 분석이 끝나기 전에 페이지가 다시 열린 경우 */
+  store.set('rc_pending', '');
+  setTab('B');
+  $('url').value = 'https://youtu.be/' + pending;
+  $('jobThumb').src = thumbUrl(pending); $('jobThumb').hidden = false;
+  msg('이 영상을 분석하던 중에 페이지가 다시 열려서 중단됐습니다. "레시피 만들기"를 다시 누르고, 끝날 때까지 다른 앱으로 나가지 말고 기다려 주세요.', 'err');
+} else setTab(cur ? store.get('rc_tab', 'I') : 'B');
 loadModels();
 </script>
 </body>
