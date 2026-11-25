@@ -95,6 +95,12 @@
   .bar i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .2s; }
 
   .thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 12px; display: block; background: var(--soft); flex: none; }
+  .pin { position: relative; flex: none; margin: 0 12px 8px; aspect-ratio: 16/9; max-height: 38vh; border-radius: 12px; overflow: hidden; background: #000; }
+  .pin iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .playbtn { position: relative; display: block; width: 100%; min-height: 0; padding: 0; border: 0; border-radius: 12px; overflow: hidden; background: none; flex: none; }
+  .playbtn .play { position: absolute; left: 50%; top: 50%; width: 68px; height: 68px; margin: -34px 0 0 -34px; border-radius: 50%; background: rgba(0, 0, 0, .62); }
+  .playbtn .play::after { content: ""; position: absolute; left: 27px; top: 20px; border-style: solid; border-width: 14px 0 14px 22px; border-color: transparent transparent transparent #fff; }
+  .top #closeVid { font-size: 14px; padding: 6px 10px; min-height: 40px; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
   .chip { font-size: 14px; padding: 5px 10px; border-radius: 6px; background: var(--accent-soft); color: var(--accent-ink); }
   .chip.tag { background: var(--soft); color: var(--sub); }
@@ -171,8 +177,10 @@
   <div class="top">
     <button type="button" id="back" aria-label="목록으로 돌아가기">← 목록</button>
     <div class="rt" id="rtitle"></div>
+    <button type="button" id="closeVid" hidden>영상 닫기</button>
     <div class="count" id="count"></div>
   </div>
+  <div class="pin" id="pin" hidden></div>
   <div class="deck" id="deck"></div>
   <div class="bottom">
     <button type="button" id="prev">이전</button>
@@ -426,6 +434,7 @@ function show(rec, push = true) {
   if (push) history.pushState({ recipe: true }, '');
 }
 function closeRecipe() {
+  stopVideo();
   cur = null; setWake(false);
   $('recipe').hidden = true; $('home').hidden = false;
   document.title = '영상 레시피';
@@ -433,6 +442,34 @@ function closeRecipe() {
 }
 $('back').onclick = () => history.state?.recipe ? history.back() : closeRecipe();
 addEventListener('popstate', () => { if (cur) closeRecipe(); });
+
+function playButton() {
+  const btn = el('button', { type: 'button', className: 'playbtn', id: 'playBtn', hidden: !$('pin').hidden },
+    el('img', { className: 'thumb', src: thumbUrl(cur.id), alt: '' }),
+    el('span', { className: 'play' }));
+  btn.setAttribute('aria-label', cur.data.title + ' 영상 재생');
+  btn.onclick = playVideo;
+  return btn;
+}
+function playVideo() {
+  const f = el('iframe', {
+    src: 'https://www.youtube-nocookie.com/embed/' + cur.id + '?autoplay=1&playsinline=1&rel=0',
+    title: cur.data.title + ' 영상', allowFullscreen: true,
+  });
+  f.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen');
+  $('pin').replaceChildren(f);
+  $('pin').hidden = false; $('closeVid').hidden = false;
+  const b = $('playBtn'); if (b) b.hidden = true;
+  keepPos();
+}
+function stopVideo() {
+  $('pin').replaceChildren();
+  $('pin').hidden = true; $('closeVid').hidden = true;
+  const b = $('playBtn'); if (b) b.hidden = false;
+  keepPos();
+}
+const keepPos = () => { if (cur) requestAnimationFrame(() => { deck.scrollLeft = (cur.pos || 0) * deck.clientWidth; }); };
+$('closeVid').onclick = stopVideo;
 
 function overviewSlide() {
   const d = cur.data, meta = [];
@@ -449,7 +486,7 @@ function overviewSlide() {
   const reset = el('button', { type: 'button', textContent: '체크 전부 지우기' });
   reset.onclick = () => { cur.ing = []; cur.step = []; persist(); const r = cur; show(r, false); };
   return slide('',
-    el('img', { className: 'thumb', src: thumbUrl(cur.id), alt: d.title + ' 영상 썸네일' }),
+    playButton(),
     el('h2', { textContent: d.title }),
     el('div', { className: 'chips' }, meta.map(t => el('span', { className: 'chip', textContent: t }))),
     el('div', { className: 'chips' }, (d.tags || []).map(t => el('span', { className: 'chip tag', textContent: '#' + t.replace(/^#/, '') }))),
