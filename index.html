@@ -165,7 +165,11 @@
   .seg button[aria-pressed=true] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
   .dlgbtns { display: flex; gap: 8px; margin-top: 18px; }
   .dlgbtns button { flex: 1; }
-  #pickQ { margin-top: 12px; }
+  #pickQ { margin-top: 8px; }
+  .memorow { margin-top: 12px; }
+  .memorow button { flex: none; }
+  .or { font-size: 14px; color: var(--sub); margin: 16px 0 0; }
+  .memo { flex: 1; min-width: 0; padding: 8px 0; font-weight: 600; overflow-wrap: anywhere; }
   #pickList { max-height: 48dvh; overflow-y: auto; }
   .toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 10; width: max-content; max-width: 90vw; padding: 10px 16px; border-radius: 10px; background: var(--ink); color: var(--bg); font-size: 15px; text-align: center; }
   @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
@@ -305,6 +309,11 @@
 
 <dialog id="dlgPick" aria-labelledby="pickHead">
   <h3 id="pickHead" tabindex="-1" autofocus></h3>
+  <div class="row memorow">
+    <input type="text" id="pickMemo" maxlength="60" placeholder="직접 입력 (예: 외식, 샐러드)" aria-label="식단 직접 입력">
+    <button type="button" class="primary" id="pickMemoAdd">추가</button>
+  </div>
+  <p class="or">또는 저장된 레시피에서 고르기</p>
   <input type="search" id="pickQ" placeholder="레시피 이름, 재료로 검색" aria-label="레시피 검색">
   <ul class="history" id="pickList"></ul>
   <div class="dlgbtns"><button type="button" id="pickClose">닫기</button></div>
@@ -745,7 +754,11 @@ const parseDate = s => { const [y, m, d] = s.split('-').map(Number); return new 
 const dateLabel = s => { const d = parseDate(s); return `${d.getMonth() + 1}월 ${d.getDate()}일 (${DOW[d.getDay()]})`; };
 let selDate = iso(new Date());
 
-const planItems = (date, k) => ((plan[date] || {})[k] || []).map(id => recipes.find(r => r.id === id)).filter(Boolean);
+const planItems = (date, k) => ((plan[date] || {})[k] || []).map(v => {
+  if (v.startsWith('note:')) return { v, note: v.slice(5) };
+  const r = recipes.find(x => x.id === v);
+  return r ? { v, r } : null;
+}).filter(Boolean);
 const dayCount = date => MEALS.reduce((n, [k]) => n + planItems(date, k).length, 0);
 function addToPlan(date, k, id) {
   const day = plan[date] || (plan[date] = {});
@@ -778,16 +791,16 @@ function renderPlan() {
   $('dayLabel').textContent = dateLabel(selDate) + (selDate === today ? ' · 오늘' : '');
   $('meals').replaceChildren(...MEALS.map(([k, name]) => {
     const items = planItems(selDate, k);
-    const add = el('button', { type: 'button', textContent: items.length ? '+ 추가' : '+ 레시피 추가', className: items.length ? '' : 'slot' });
-    add.setAttribute('aria-label', name + '에 레시피 추가');
+    const add = el('button', { type: 'button', textContent: '+ 추가', className: items.length ? '' : 'slot' });
+    add.setAttribute('aria-label', name + '에 추가');
     add.onclick = () => openPick(selDate, k);
     return el('section', { className: 'card meal' },
       el('div', { className: 'head' }, el('h3', { textContent: name }), items.length ? add : null),
-      !items.length ? add : el('ul', { className: 'history' }, items.map(r => {
+      !items.length ? add : el('ul', { className: 'history' }, items.map(({ v, r, note }) => {
         const rm = el('button', { type: 'button', textContent: '빼기' });
-        rm.setAttribute('aria-label', r.data.title + ' ' + name + '에서 빼기');
-        rm.onclick = () => { removeFromPlan(selDate, k, r.id); renderPlan(); };
-        return el('li', {}, recipeLink(r, () => openRecipe(r)), rm);
+        rm.setAttribute('aria-label', (r ? r.data.title : note) + ' ' + name + '에서 빼기');
+        rm.onclick = () => { removeFromPlan(selDate, k, v); renderPlan(); };
+        return el('li', {}, r ? recipeLink(r, () => openRecipe(r)) : el('span', { className: 'memo', textContent: note }), rm);
       })));
   }));
 }
@@ -802,6 +815,7 @@ function openPick(date, k) {
   pickCtx = { date, k };
   $('pickHead').textContent = `${dateLabel(date)} ${mealName(k)}에 추가`;
   $('pickQ').value = '';
+  $('pickMemo').value = '';
   renderPick();
   $('dlgPick').showModal();
 }
@@ -819,6 +833,16 @@ function renderPick() {
   }))));
 }
 $('pickQ').oninput = renderPick;
+function addMemo() {
+  const text = $('pickMemo').value.trim();
+  if (!text) return $('pickMemo').focus();
+  addToPlan(pickCtx.date, pickCtx.k, 'note:' + text);
+  $('dlgPick').close();
+  renderPlan();
+  toast(`${mealName(pickCtx.k)}에 "${text}" 추가`);
+}
+$('pickMemoAdd').onclick = addMemo;
+$('pickMemo').onkeydown = e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addMemo(); } };
 $('pickClose').onclick = () => $('dlgPick').close();
 
 /* 레시피에서: 날짜와 끼니 골라서 추가 */
